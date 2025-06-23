@@ -50,17 +50,17 @@ class ColorGridWindow(QMainWindow):
         #combined_1_7.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
         layout_1_7 = QVBoxLayout()
         layout_1_7.setContentsMargins(0, 0, 0, 0)
-        project_list = QListWidget()
-        project_list.setStyleSheet("QListWidget { border: none; font-size: 16px; }")
+        self.project_list = QListWidget()
+        self.project_list.setStyleSheet("QListWidget { border: none; font-size: 16px; }")
         self.project_path = "C:\\Avtogen"
         if not os.path.exists(self.project_path):
             os.makedirs(self.project_path)
         for folder in os.listdir(self.project_path):
             if os.path.isdir(os.path.join(self.project_path, folder)):
-                project_list.addItem(folder)
-        project_list.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        project_list.itemClicked.connect(self.on_project_selected)  # Connect the signal
-        layout_1_7.addWidget(project_list)
+                self.project_list.addItem(folder)
+        self.project_list.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.project_list.itemClicked.connect(self.on_project_selected)  # Connect the signal
+        layout_1_7.addWidget(self.project_list)
         combined_1_7.setLayout(layout_1_7)
         grid_layout.addWidget(combined_1_7, 1, 0, 7, 3)
 
@@ -116,9 +116,9 @@ class ColorGridWindow(QMainWindow):
 
         cell_4_4 = QWidget()
         #cell_4_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
+        cell_4_4.setStyleSheet("background-color: #90EE90; border: 1px solid #404040;")
         cell_4_4.setFixedHeight(30)
-        cell_4_4.setMinimumWidth(200)
-        cell_4_4.setStyleSheet("border: 1px solid #404040;")  # Dark gray border
+        cell_4_4.setMinimumWidth(200)        
         label_4_4 = QLabel("Материалы для базы")
         label_4_4.setAlignment(Qt.AlignCenter)
         cell_4_4.setLayout(QVBoxLayout())
@@ -137,8 +137,8 @@ class ColorGridWindow(QMainWindow):
         #cell_5_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
         cell_5_4.setFixedHeight(30)
         cell_5_4.setMinimumWidth(200)
-        cell_5_4.setStyleSheet("border: 1px solid #404040;")  # Dark gray border
         label_5_4 = QLabel("Видео исходное")
+        cell_5_4.setStyleSheet("background-color: #FFA07A; border: 1px solid #404040;")
         label_5_4.setAlignment(Qt.AlignCenter)
         cell_5_4.setLayout(QVBoxLayout())
         cell_5_4.layout().setContentsMargins(0, 0, 0, 0)
@@ -156,7 +156,7 @@ class ColorGridWindow(QMainWindow):
         #cell_6_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
         cell_6_4.setFixedHeight(30)
         cell_6_4.setMinimumWidth(200)
-        cell_6_4.setStyleSheet("border: 1px solid #404040;")  # Dark gray border
+        cell_6_4.setStyleSheet("background-color: #90EE90; border: 1px solid #404040;")
         label_6_4 = QLabel("Конспект исходный")
         label_6_4.setAlignment(Qt.AlignCenter)
         cell_6_4.setLayout(QVBoxLayout())
@@ -173,9 +173,10 @@ class ColorGridWindow(QMainWindow):
 
         cell_7_4 = QWidget()
         #cell_7_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
+       
         cell_7_4.setFixedHeight(30)
         cell_7_4.setMinimumWidth(200)
-        cell_7_4.setStyleSheet("border: 1px solid #404040;")  # Dark gray border
+        cell_7_4.setStyleSheet("background-color: #FFA07A; border: 1px solid #404040;")
         label_7_4 = QLabel("Изображения исходные")
         label_7_4.setAlignment(Qt.AlignCenter)
         cell_7_4.setLayout(QVBoxLayout())
@@ -214,9 +215,10 @@ class ColorGridWindow(QMainWindow):
 
         cell_8_4 = QWidget()
         #cell_8_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
+
         cell_8_4.setFixedHeight(30)
         cell_8_4.setMinimumWidth(200)
-        cell_8_4.setStyleSheet("border: 1px solid #404040;")  # Dark gray border
+        cell_8_4.setStyleSheet("background-color: #87CEFA; border: 1px solid #404040;")
         label_8_4 = QLabel("Видео финальное")
         label_8_4.setAlignment(Qt.AlignCenter)
         cell_8_4.setLayout(QVBoxLayout())
@@ -247,9 +249,10 @@ class ColorGridWindow(QMainWindow):
 
         cell_9_4 = QWidget()
         #cell_9_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
+       
         cell_9_4.setFixedHeight(30)
         cell_9_4.setMinimumWidth(200)
-        cell_9_4.setStyleSheet("border: 1px solid #404040;")  # Dark gray border
+        cell_9_4.setStyleSheet("background-color: #87CEFA; border: 1px solid #404040;")
         label_9_4 = QLabel("Аудио финальное")
         label_9_4.setAlignment(Qt.AlignCenter)
         cell_9_4.setLayout(QVBoxLayout())
@@ -280,9 +283,10 @@ class ColorGridWindow(QMainWindow):
 
         cell_10_4 = QWidget()
         #cell_10_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
+        
         cell_10_4.setFixedHeight(30)
         cell_10_4.setMinimumWidth(200)
-        cell_10_4.setStyleSheet("border: 1px solid #404040;")  # Dark gray border
+        cell_10_4.setStyleSheet("background-color: #FFA07A; border: 1px solid #404040;")
         label_10_4 = QLabel("Конспект финальный")
         label_10_4.setAlignment(Qt.AlignCenter)
         cell_10_4.setLayout(QVBoxLayout())
@@ -298,8 +302,9 @@ class ColorGridWindow(QMainWindow):
         layout_11_0 = QVBoxLayout()
         layout_11_0.setContentsMargins(0, 0, 0, 0)
         btn_11_0 = QPushButton("Удалить")
-        btn_11_0.setFixedWidth(int(250 * 0.8))  # 80% ширины одной ячейки (50 пикселей)
+        btn_11_0.setFixedWidth(int(250 * 0.8))
         btn_11_0.setFixedHeight(20)
+        btn_11_0.clicked.connect(lambda: self.delete_project(self.project_list.currentItem()))
         layout_11_0.addWidget(btn_11_0, alignment=Qt.AlignHCenter)
         cell_11_0.setLayout(layout_11_0)
         grid_layout.addWidget(cell_11_0, 11, 0, 1, 3)
@@ -312,9 +317,10 @@ class ColorGridWindow(QMainWindow):
 
         cell_11_4 = QWidget()
         #cell_11_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
+
         cell_11_4.setFixedHeight(30)
         cell_11_4.setMinimumWidth(200)
-        cell_11_4.setStyleSheet("border: 1px solid #404040;")  # Dark gray border
+        cell_11_4.setStyleSheet("background-color: #FFA07A; border: 1px solid #404040;")
         label_11_4 = QLabel("Презентация финальная")
         label_11_4.setAlignment(Qt.AlignCenter)
         cell_11_4.setLayout(QVBoxLayout())
@@ -327,6 +333,18 @@ class ColorGridWindow(QMainWindow):
         selected_project = item.text()
         full_path = os.path.join(self.project_path, selected_project)
         self.project_path_label.setText(full_path)
+
+    def delete_project(self, item):
+        if item:
+            project_name = item.text()
+            project_path = os.path.join(self.project_path, project_name)
+            try:
+                import shutil
+                shutil.rmtree(project_path)
+                self.project_list.takeItem(self.project_list.row(item))
+            except Exception as e:
+                print(f"Ошибка при удалении: {e}")
+
 
 def main():
     app = QApplication(sys.argv)
