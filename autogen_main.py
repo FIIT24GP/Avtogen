@@ -1,356 +1,560 @@
 import sys
 import os
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QGridLayout, QLabel, QVBoxLayout, QPushButton, QListWidget, QTextEdit
-from PyQt5.QtGui import QColor
-from PyQt5.QtCore import Qt, QRandomGenerator
+import shutil
+import json
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QGridLayout, 
+                            QLabel, QVBoxLayout, QPushButton, QListWidget, 
+                            QTextEdit, QMessageBox, QInputDialog, QHBoxLayout,
+                            QFrame, QSplitter)
+from PyQt5.QtGui import QColor, QFont
+from PyQt5.QtCore import Qt, pyqtSignal
 
-class ColorGridWindow(QMainWindow):
+
+class ProjectManager(QMainWindow):
+    """Менеджер проектов с улучшенным интерфейсом и функциональностью."""
+    
+    # Сигналы для взаимодействия между компонентами
+    project_selected = pyqtSignal(str)
+    
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Random Color Grid")
-        self.setMinimumSize(800, 400)
-
-        # Create central widget and grid layout
+        self.project_path = "C:\\Avtogen"
+        self.current_project = None
+        self.setup_ui()
+        self.setup_connections()
+        self.load_projects()
+        
+    def setup_ui(self):
+        """Настройка пользовательского интерфейса."""
+        self.setWindowTitle("Менеджер проектов")
+        self.setMinimumSize(1000, 700)
+        
+        # Создание центрального виджета с разделителем
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        grid_layout = QGridLayout(central_widget)
-        grid_layout.setSpacing(2)  # Add small spacing between cells
-
-        # Explicitly define each cell (8 columns x 7 rows)
-        # Row 0
-        cell_0_0 = QWidget()
-        #cell_0_0.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_0_0.setFixedHeight(30)
-        label_0_0 = QLabel("Доступные проекты")
-        label_0_0.setAlignment(Qt.AlignCenter)
-        cell_0_0.setLayout(QVBoxLayout())
-        cell_0_0.layout().setContentsMargins(0, 0, 0, 0)
-        cell_0_0.layout().addWidget(label_0_0)
-        grid_layout.addWidget(cell_0_0, 0, 0, 1, 3)
-
-        cell_0_3 = QWidget()
-        #cell_0_3.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_0_3.setFixedHeight(30)
-        cell_0_3.setFixedWidth(10)
-        grid_layout.addWidget(cell_0_3, 0, 3)
-
-        cell_0_4 = QWidget()
-        #cell_0_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_0_4.setFixedHeight(30)
-        label_0_4 = QLabel("Описание проекта")
-        label_0_4.setAlignment(Qt.AlignCenter)
-        cell_0_4.setLayout(QVBoxLayout())
-        cell_0_4.layout().setContentsMargins(0, 0, 0, 0)
-        cell_0_4.layout().addWidget(label_0_4)
-        grid_layout.addWidget(cell_0_4, 0, 4, 1, 4)
-
-        # Объединенная ячейка для Row 1-7 (столбцы 0-2)
-   # Объединенная ячейка для Row 1-7 (столбцы 0-2)
-        combined_1_7 = QWidget()
-        #combined_1_7.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        layout_1_7 = QVBoxLayout()
-        layout_1_7.setContentsMargins(0, 0, 0, 0)
-        self.project_list = QListWidget()
-        self.project_list.setStyleSheet("QListWidget { border: none; font-size: 16px; }")
-        self.project_path = "C:\\Avtogen"
-        if not os.path.exists(self.project_path):
-            os.makedirs(self.project_path)
-        for folder in os.listdir(self.project_path):
-            if os.path.isdir(os.path.join(self.project_path, folder)):
-                self.project_list.addItem(folder)
-        self.project_list.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.project_list.itemClicked.connect(self.on_project_selected)  # Connect the signal
-        layout_1_7.addWidget(self.project_list)
-        combined_1_7.setLayout(layout_1_7)
-        grid_layout.addWidget(combined_1_7, 1, 0, 7, 3)
-
-        cell_1_3 = QWidget()
-        #cell_1_3.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_1_3.setFixedHeight(30)
-        cell_1_3.setFixedWidth(10)
-        grid_layout.addWidget(cell_1_3, 1, 3)
-
-        # Исправление для ячейки cell_1_4 (объединенная ячейка, строки 1-2, столбцы 4-7)
-        cell_1_4 = QWidget()
-        #cell_1_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_1_4.setMinimumWidth(200)
-        cell_1_4.setLayout(QVBoxLayout())
-        cell_1_4.layout().setContentsMargins(0, 0, 0, 0)
-        text_area_1_4 = QTextEdit()
-        #text_area_1_4.setStyleSheet("background-color: #FFFFFF; border: 1px solid #CCCCCC;")
-        text_area_1_4.setPlaceholderText("Введите описание проекта")
-        cell_1_4.layout().addWidget(text_area_1_4)
-        grid_layout.addWidget(cell_1_4, 1, 4, 2, 4)
-
-        # Row 2 (оставляем пустой, так как объединено)
-        cell_2_3 = QWidget()
-        #cell_2_3.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_2_3.setFixedHeight(30)
-        cell_2_3.setFixedWidth(10)
-        grid_layout.addWidget(cell_2_3, 2, 3)
-
-        # Row 3
-        cell_3_3 = QWidget()
-        #cell_3_3.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_3_3.setFixedHeight(30)
-        cell_3_3.setFixedWidth(10)
-        grid_layout.addWidget(cell_3_3, 3, 3)
-
-        cell_3_4 = QWidget()
-        #cell_3_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_3_4.setFixedHeight(30)
-        cell_3_4.setMinimumWidth(200)
-        label_3_4 = QLabel("Ход работы")
-        label_3_4.setAlignment(Qt.AlignCenter)
-        cell_3_4.setLayout(QVBoxLayout())
-        cell_3_4.layout().setContentsMargins(0, 0, 0, 0)
-        cell_3_4.layout().addWidget(label_3_4)
-        grid_layout.addWidget(cell_3_4, 3, 4, 1, 4)
-
-        # Row 4
-        cell_4_3 = QWidget()
-        #cell_4_3.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_4_3.setFixedHeight(30)
-        cell_4_3.setFixedWidth(10)
-        grid_layout.addWidget(cell_4_3, 4, 3)
-
-        cell_4_4 = QWidget()
-        #cell_4_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_4_4.setStyleSheet("background-color: #90EE90; border: 1px solid #404040;")
-        cell_4_4.setFixedHeight(30)
-        cell_4_4.setMinimumWidth(200)        
-        label_4_4 = QLabel("Материалы для базы")
-        label_4_4.setAlignment(Qt.AlignCenter)
-        cell_4_4.setLayout(QVBoxLayout())
-        cell_4_4.layout().setContentsMargins(0, 0, 0, 0)
-        cell_4_4.layout().addWidget(label_4_4)
-        grid_layout.addWidget(cell_4_4, 4, 4, 1, 4)
-
-        # Row 5
-        cell_5_3 = QWidget()
-        #cell_5_3.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_5_3.setFixedHeight(30)
-        cell_5_3.setFixedWidth(10)
-        grid_layout.addWidget(cell_5_3, 5, 3)
-
-        cell_5_4 = QWidget()
-        #cell_5_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_5_4.setFixedHeight(30)
-        cell_5_4.setMinimumWidth(200)
-        label_5_4 = QLabel("Видео исходное")
-        cell_5_4.setStyleSheet("background-color: #FFA07A; border: 1px solid #404040;")
-        label_5_4.setAlignment(Qt.AlignCenter)
-        cell_5_4.setLayout(QVBoxLayout())
-        cell_5_4.layout().setContentsMargins(0, 0, 0, 0)
-        cell_5_4.layout().addWidget(label_5_4)
-        grid_layout.addWidget(cell_5_4, 5, 4, 1, 4)
-
-        # Row 6
-        cell_6_3 = QWidget()
-        #cell_6_3.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_6_3.setFixedHeight(30)
-        cell_6_3.setFixedWidth(10)
-        grid_layout.addWidget(cell_6_3, 6, 3)
-
-        cell_6_4 = QWidget()
-        #cell_6_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_6_4.setFixedHeight(30)
-        cell_6_4.setMinimumWidth(200)
-        cell_6_4.setStyleSheet("background-color: #90EE90; border: 1px solid #404040;")
-        label_6_4 = QLabel("Конспект исходный")
-        label_6_4.setAlignment(Qt.AlignCenter)
-        cell_6_4.setLayout(QVBoxLayout())
-        cell_6_4.layout().setContentsMargins(0, 0, 0, 0)
-        cell_6_4.layout().addWidget(label_6_4)
-        grid_layout.addWidget(cell_6_4, 6, 4, 1, 4)
-
-        # Row 7
-        cell_7_3 = QWidget()
-        #cell_7_3.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_7_3.setFixedHeight(30)
-        cell_7_3.setFixedWidth(10)
-        grid_layout.addWidget(cell_7_3, 7, 3)
-
-        cell_7_4 = QWidget()
-        #cell_7_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-       
-        cell_7_4.setFixedHeight(30)
-        cell_7_4.setMinimumWidth(200)
-        cell_7_4.setStyleSheet("background-color: #FFA07A; border: 1px solid #404040;")
-        label_7_4 = QLabel("Изображения исходные")
-        label_7_4.setAlignment(Qt.AlignCenter)
-        cell_7_4.setLayout(QVBoxLayout())
-        cell_7_4.layout().setContentsMargins(0, 0, 0, 0)
-        cell_7_4.layout().addWidget(label_7_4)
-        grid_layout.addWidget(cell_7_4, 7, 4, 1, 4)
-
-        # Row 8
-        cell_8_0 = QWidget()
-        #cell_8_0.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_8_0.setFixedHeight(30)
-        cell_8_0.setMinimumWidth(50)
-        label_8_0 = QLabel("Папка проекта")
-        label_8_0.setAlignment(Qt.AlignCenter)
-        cell_8_0.setLayout(QVBoxLayout())
-        cell_8_0.layout().setContentsMargins(0, 0, 0, 0)
-        cell_8_0.layout().addWidget(label_8_0)
-        grid_layout.addWidget(cell_8_0, 8, 0)
-
-        cell_8_1 = QWidget()
-        #cell_8_1.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_8_1.setFixedHeight(30)
-        cell_8_1.setMinimumWidth(100)  # Общая ширина для объединения 1-2
-        self.project_path_label = QLabel("")  # Store reference to the label
-        self.project_path_label.setAlignment(Qt.AlignCenter)
-        cell_8_1.setLayout(QVBoxLayout())
-        cell_8_1.layout().setContentsMargins(0, 0, 0, 0)
-        cell_8_1.layout().addWidget(self.project_path_label)
-        grid_layout.addWidget(cell_8_1, 8, 1, 1, 2)  # Объединяет столбцы 1-2
-
-        cell_8_3 = QWidget()
-        #cell_8_3.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_8_3.setFixedHeight(30)
-        cell_8_3.setFixedWidth(10)
-        grid_layout.addWidget(cell_8_3, 8, 3)
-
-        cell_8_4 = QWidget()
-        #cell_8_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-
-        cell_8_4.setFixedHeight(30)
-        cell_8_4.setMinimumWidth(200)
-        cell_8_4.setStyleSheet("background-color: #87CEFA; border: 1px solid #404040;")
-        label_8_4 = QLabel("Видео финальное")
-        label_8_4.setAlignment(Qt.AlignCenter)
-        cell_8_4.setLayout(QVBoxLayout())
-        cell_8_4.layout().setContentsMargins(0, 0, 0, 0)
-        cell_8_4.layout().addWidget(label_8_4)
-        grid_layout.addWidget(cell_8_4, 8, 4, 1, 4)
-
-
-        # Row 9
-        cell_9_0 = QWidget()
-        #cell_9_0.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_9_0.setFixedHeight(30)
-        cell_9_0.setMinimumWidth(150)
-        layout_9_0 = QVBoxLayout()
-        layout_9_0.setContentsMargins(0, 0, 0, 0)
-        btn_9_0 = QPushButton("Создать")
-        btn_9_0.setFixedWidth(int(250 * 0.8))  # 80% ширины одной ячейки (50 пикселей)
-        btn_9_0.setFixedHeight(20)
-        layout_9_0.addWidget(btn_9_0, alignment=Qt.AlignHCenter)
-        cell_9_0.setLayout(layout_9_0)
-        grid_layout.addWidget(cell_9_0, 9, 0, 1, 3)
-
-        cell_9_3 = QWidget()
-        #cell_9_3.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_9_3.setFixedHeight(30)
-        cell_9_3.setFixedWidth(10)
-        grid_layout.addWidget(cell_9_3, 9, 3)
-
-        cell_9_4 = QWidget()
-        #cell_9_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-       
-        cell_9_4.setFixedHeight(30)
-        cell_9_4.setMinimumWidth(200)
-        cell_9_4.setStyleSheet("background-color: #87CEFA; border: 1px solid #404040;")
-        label_9_4 = QLabel("Аудио финальное")
-        label_9_4.setAlignment(Qt.AlignCenter)
-        cell_9_4.setLayout(QVBoxLayout())
-        cell_9_4.layout().setContentsMargins(0, 0, 0, 0)
-        cell_9_4.layout().addWidget(label_9_4)
-        grid_layout.addWidget(cell_9_4, 9, 4, 1, 4)
-
-        # Row 10
-        cell_10_0 = QWidget()
-        cell_10_0 = QWidget()
-        #cell_10_0.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_10_0.setFixedHeight(30)
-        cell_10_0.setMinimumWidth(150)
-        layout_10_0 = QVBoxLayout()
-        layout_10_0.setContentsMargins(0, 0, 0, 0)
-        btn_10_0 = QPushButton("Перенести в папку")
-        btn_10_0.setFixedWidth(int(250 * 0.8))  # 80% ширины одной ячейки (50 пикселей)
-        btn_10_0.setFixedHeight(20)
-        layout_10_0.addWidget(btn_10_0, alignment=Qt.AlignHCenter)
-        cell_10_0.setLayout(layout_10_0)
-        grid_layout.addWidget(cell_10_0, 10, 0, 1, 3)
-
-        cell_10_3 = QWidget()
-        #cell_10_3.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_10_3.setFixedHeight(30)
-        cell_10_3.setFixedWidth(10)
-        grid_layout.addWidget(cell_10_3, 10, 3)
-
-        cell_10_4 = QWidget()
-        #cell_10_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
         
-        cell_10_4.setFixedHeight(30)
-        cell_10_4.setMinimumWidth(200)
-        cell_10_4.setStyleSheet("background-color: #FFA07A; border: 1px solid #404040;")
-        label_10_4 = QLabel("Конспект финальный")
-        label_10_4.setAlignment(Qt.AlignCenter)
-        cell_10_4.setLayout(QVBoxLayout())
-        cell_10_4.layout().setContentsMargins(0, 0, 0, 0)
-        cell_10_4.layout().addWidget(label_10_4)
-        grid_layout.addWidget(cell_10_4, 10, 4, 1, 4)
-
-        # Row 11
-        cell_11_0 = QWidget()
-        #cell_11_0.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_11_0.setFixedHeight(30)
-        cell_11_0.setMinimumWidth(150)
-        layout_11_0 = QVBoxLayout()
-        layout_11_0.setContentsMargins(0, 0, 0, 0)
-        btn_11_0 = QPushButton("Удалить")
-        btn_11_0.setFixedWidth(int(250 * 0.8))
-        btn_11_0.setFixedHeight(20)
-        btn_11_0.clicked.connect(lambda: self.delete_project(self.project_list.currentItem()))
-        layout_11_0.addWidget(btn_11_0, alignment=Qt.AlignHCenter)
-        cell_11_0.setLayout(layout_11_0)
-        grid_layout.addWidget(cell_11_0, 11, 0, 1, 3)
-
-        cell_11_3 = QWidget()
-        #cell_11_3.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-        cell_11_3.setFixedHeight(30)
-        cell_11_3.setFixedWidth(10)
-        grid_layout.addWidget(cell_11_3, 11, 3)
-
-        cell_11_4 = QWidget()
-        #cell_11_4.setStyleSheet(f"background-color: {QColor(QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256), QRandomGenerator.global_().bounded(256)).name()};")
-
-        cell_11_4.setFixedHeight(30)
-        cell_11_4.setMinimumWidth(200)
-        cell_11_4.setStyleSheet("background-color: #FFA07A; border: 1px solid #404040;")
-        label_11_4 = QLabel("Презентация финальная")
-        label_11_4.setAlignment(Qt.AlignCenter)
-        cell_11_4.setLayout(QVBoxLayout())
-        cell_11_4.layout().setContentsMargins(0, 0, 0, 0)
-        cell_11_4.layout().addWidget(label_11_4)
-        grid_layout.addWidget(cell_11_4, 11, 4, 1, 4)
-
-    def on_project_selected(self, item):
-        """Handle project selection from the list box."""
-        selected_project = item.text()
-        full_path = os.path.join(self.project_path, selected_project)
-        self.project_path_label.setText(full_path)
-
-    def delete_project(self, item):
-        if item:
-            project_name = item.text()
+        # Основной макет
+        main_layout = QHBoxLayout(central_widget)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        
+        # Создание разделителя
+        splitter = QSplitter(Qt.Horizontal)
+        main_layout.addWidget(splitter)
+        
+        # Левая панель - список проектов
+        left_panel = self.create_project_panel()
+        splitter.addWidget(left_panel)
+        
+        # Правая панель - детали проекта
+        right_panel = self.create_details_panel()
+        splitter.addWidget(right_panel)
+        
+        # Установка пропорций разделителя
+        splitter.setSizes([300, 700])
+        
+    def create_project_panel(self):
+        """Создание панели со списком проектов."""
+        panel = QFrame()
+        panel.setFrameStyle(QFrame.StyledPanel)
+        layout = QVBoxLayout(panel)
+        
+        # Заголовок
+        title = QLabel("Доступные проекты")
+        title.setFont(QFont("Arial", 12, QFont.Bold))
+        title.setAlignment(Qt.AlignCenter)
+        title.setStyleSheet("padding: 10px; background-color: #f0f0f0; border: 1px solid #ccc;")
+        layout.addWidget(title)
+        
+        # Список проектов
+        self.project_list = QListWidget()
+        self.project_list.setStyleSheet("""
+            QListWidget {
+                border: 1px solid #ccc;
+                font-size: 14px;
+                selection-background-color: #4CAF50;
+                selection-color: white;
+            }
+            QListWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #eee;
+                color: black;
+            }
+            QListWidget::item:hover {
+                background-color: #f5f5f5;
+            }
+            QListWidget::item:selected {
+                background-color: #4CAF50;
+                color: white;
+            }
+        """)
+        layout.addWidget(self.project_list)
+        
+        # Кнопки управления проектами
+        buttons_layout = QVBoxLayout()
+        
+        self.create_btn = QPushButton("Создать проект")
+        self.create_btn.setStyleSheet(self.get_button_style("#4CAF50"))
+        buttons_layout.addWidget(self.create_btn)
+        
+        self.delete_btn = QPushButton("Удалить проект")
+        self.delete_btn.setStyleSheet(self.get_button_style("#f44336"))
+        self.delete_btn.setEnabled(False)
+        buttons_layout.addWidget(self.delete_btn)
+        
+        self.flow_btn = QPushButton("Перейти к ходу работы")
+        self.flow_btn.setStyleSheet(self.get_button_style("#2196F3"))
+        self.flow_btn.setEnabled(False)
+        buttons_layout.addWidget(self.flow_btn)
+        
+        layout.addLayout(buttons_layout)
+        
+        # Информация о текущем проекте
+        self.project_info = QLabel("Выберите проект")
+        self.project_info.setWordWrap(True)
+        self.project_info.setStyleSheet("padding: 10px; background-color: #f9f9f9; border: 1px solid #ddd;")
+        layout.addWidget(self.project_info)
+        
+        return panel
+        
+    def create_details_panel(self):
+        """Создание панели с деталями проекта."""
+        panel = QFrame()
+        panel.setFrameStyle(QFrame.StyledPanel)
+        layout = QVBoxLayout(panel)
+        
+        # Описание проекта
+        desc_title = QLabel("Описание проекта")
+        desc_title.setFont(QFont("Arial", 12, QFont.Bold))
+        desc_title.setAlignment(Qt.AlignCenter)
+        desc_title.setStyleSheet("padding: 10px; background-color: #f0f0f0; border: 1px solid #ccc;")
+        layout.addWidget(desc_title)
+        
+        self.description_edit = QTextEdit()
+        self.description_edit.setPlaceholderText("Введите описание проекта...")
+        self.description_edit.setMaximumHeight(150)
+        self.description_edit.setStyleSheet("border: 1px solid #ccc; font-size: 14px;")
+        layout.addWidget(self.description_edit)
+        
+        # Панель хода работы
+        workflow_title = QLabel("Ход работы")
+        workflow_title.setFont(QFont("Arial", 12, QFont.Bold))
+        workflow_title.setAlignment(Qt.AlignCenter)
+        workflow_title.setStyleSheet("padding: 10px; background-color: #f0f0f0; border: 1px solid #ccc; margin-top: 10px;")
+        layout.addWidget(workflow_title)
+        
+        # Создание этапов работы
+        workflow_widget = self.create_workflow_widget()
+        layout.addWidget(workflow_widget)
+        
+        return panel
+        
+    def create_workflow_widget(self):
+        """Создание виджета с этапами работы."""
+        widget = QWidget()
+        layout = QGridLayout(widget)
+        layout.setSpacing(5)
+        
+        # Определение этапов работы с их статусами
+        self.workflow_stages = [
+            ("Материалы для базы", "completed"),
+            ("Видео исходное", "in_progress"), 
+            ("Конспект исходный", "completed"),
+            ("Изображения исходные", "in_progress"),
+            ("Видео финальное", "pending"),
+            ("Аудио финальное", "pending"),
+            ("Конспект финальный", "in_progress"),
+            ("Презентация финальная", "in_progress")
+        ]
+        
+        # Создание карточек для каждого этапа
+        for i, (stage_name, status) in enumerate(self.workflow_stages):
+            row = i // 2
+            col = i % 2
+            
+            stage_card = self.create_stage_card(stage_name, status)
+            layout.addWidget(stage_card, row, col)
+            
+        return widget
+        
+    def create_stage_card(self, name, status):
+        """Создание карточки этапа работы."""
+        card = QFrame()
+        card.setFrameStyle(QFrame.StyledPanel)
+        card.setFixedHeight(60)
+        
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(10, 5, 10, 5)
+        
+        # Заголовок этапа
+        title_label = QLabel(name)
+        title_label.setAlignment(Qt.AlignCenter)
+        title_label.setFont(QFont("Arial", 10, QFont.Bold))
+        layout.addWidget(title_label)
+        
+        # Установка цвета в зависимости от статуса
+        colors = {
+            "completed": "#90EE90",  # Зеленый - завершено
+            "in_progress": "#FFA07A",  # Оранжевый - в процессе
+            "pending": "#87CEFA"  # Голубой - ожидание
+        }
+        
+        card.setStyleSheet(f"""
+            QFrame {{
+                background-color: {colors.get(status, '#f0f0f0')};
+                border: 2px solid #404040;
+                border-radius: 5px;
+            }}
+        """)
+        
+        return card
+        
+    def get_button_style(self, color):
+        """Получение стиля для кнопок."""
+        return f"""
+            QPushButton {{
+                background-color: {color};
+                color: white;
+                border: none;
+                padding: 10px;
+                font-size: 14px;
+                font-weight: bold;
+                border-radius: 5px;
+            }}
+            QPushButton:hover {{
+                background-color: {self.darken_color(color)};
+            }}
+            QPushButton:pressed {{
+                background-color: {self.darken_color(color, 0.3)};
+            }}
+            QPushButton:disabled {{
+                background-color: #cccccc;
+                color: #666666;
+            }}
+        """
+        
+    def darken_color(self, color, factor=0.1):
+        """Затемнение цвета для эффектов hover."""
+        color = color.lstrip('#')
+        rgb = tuple(int(color[i:i+2], 16) for i in (0, 2, 4))
+        darkened = tuple(int(c * (1 - factor)) for c in rgb)
+        return f"#{darkened[0]:02x}{darkened[1]:02x}{darkened[2]:02x}"
+        
+    def setup_connections(self):
+        """Настройка соединений сигналов и слотов."""
+        self.project_list.itemClicked.connect(self.on_project_selected)
+        self.create_btn.clicked.connect(self.create_project)
+        self.delete_btn.clicked.connect(self.delete_project)
+        self.flow_btn.clicked.connect(self.open_flow_window)
+        self.description_edit.textChanged.connect(self.save_description)
+        
+    def ensure_project_directory(self):
+        """Обеспечение существования директории проектов."""
+        if not os.path.exists(self.project_path):
+            try:
+                os.makedirs(self.project_path)
+            except OSError as e:
+                self.show_error(f"Не удалось создать директорию проектов: {e}")
+                return False
+        return True
+        
+    def load_projects(self):
+        """Загрузка списка проектов."""
+        if not self.ensure_project_directory():
+            return
+            
+        self.project_list.clear()
+        
+        try:
+            for folder in os.listdir(self.project_path):
+                folder_path = os.path.join(self.project_path, folder)
+                if os.path.isdir(folder_path):
+                    self.project_list.addItem(folder)
+        except OSError as e:
+            self.show_error(f"Ошибка при загрузке проектов: {e}")
+            
+    def create_project(self):
+        """Создание нового проекта."""
+        project_name, ok = QInputDialog.getText(
+            self, 
+            "Новый проект", 
+            "Введите название проекта:"
+        )
+        
+        if ok and project_name.strip():
+            project_name = project_name.strip()
+            project_full_path = os.path.join(self.project_path, project_name)
+            
+            if os.path.exists(project_full_path):
+                self.show_warning("Проект с таким названием уже существует!")
+                return
+                
+            try:
+                os.makedirs(project_full_path)
+                
+                # Создание стандартных подпапок
+                subfolders = [
+                    "materials", "source_video", "source_notes", 
+                    "source_images", "final_video", "final_audio",
+                    "final_notes", "final_presentation"
+                ]
+                
+                for subfolder in subfolders:
+                    os.makedirs(os.path.join(project_full_path, subfolder), exist_ok=True)
+                
+                # Создание .avtogen файла с начальными данными
+                self.create_avtogen_file(project_full_path, project_name)
+                
+                self.load_projects()
+                self.select_project(project_name)
+                self.show_info(f"Проект '{project_name}' успешно создан!")
+                
+            except OSError as e:
+                self.show_error(f"Ошибка при создании проекта: {e}")
+                
+    def create_avtogen_file(self, project_path, project_name):
+        """Создание .avtogen файла для проекта."""
+        avtogen_file = os.path.join(project_path, f"{project_name}.avtogen")
+        
+        # Начальные данные проекта
+        initial_data = {
+            "Project_Name": project_name,
+            "Offset": 0,
+            "Slide_Style": "По умолчанию", 
+            "Timings": 5,
+            "Description": "",
+            "Workflow_Status": {
+                "materials": "not_started",
+                "conspect": "not_started",
+                "images": "not_started",
+                "final_conspect": "not_started",
+                "presentation": "not_started",
+                "final_audio": "not_started",
+                "final_video": "not_started",
+                "source_video": "not_started",
+                "rev_images": "not_started",
+                "rev_audio": "not_started",
+                "rev_conspect": "not_started",
+                "rev_final_conspect": "not_started",
+                "rev_presentation": "not_started",
+                "rev_materials": "not_started"
+            }
+        }
+        
+        try:
+            with open(avtogen_file, 'w', encoding='utf-8') as f:
+                json.dump(initial_data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            self.show_error(f"Ошибка при создании .avtogen файла: {e}")
+                
+    def delete_project(self):
+        """Удаление выбранного проекта."""
+        current_item = self.project_list.currentItem()
+        if not current_item:
+            return
+            
+        project_name = current_item.text()
+        
+        reply = QMessageBox.question(
+            self,
+            "Подтверждение удаления",
+            f"Вы действительно хотите удалить проект '{project_name}'?\n"
+            "Все файлы проекта будут безвозвратно удалены!",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
+        
+        if reply == QMessageBox.Yes:
             project_path = os.path.join(self.project_path, project_name)
             try:
-                import shutil
                 shutil.rmtree(project_path)
-                self.project_list.takeItem(self.project_list.row(item))
-            except Exception as e:
-                print(f"Ошибка при удалении: {e}")
+                self.load_projects()
+                self.current_project = None
+                self.update_project_info()
+                self.description_edit.clear()
+                self.delete_btn.setEnabled(False)
+                self.flow_btn.setEnabled(False)
+                # Очищаем выделение
+                self.project_list.clearSelection()
+                self.show_info(f"Проект '{project_name}' успешно удален!")
+                
+            except OSError as e:
+                self.show_error(f"Ошибка при удалении проекта: {e}")
+                
+    def on_project_selected(self, item):
+        """Обработка выбора проекта."""
+        if item is None:
+            return
+            
+        project_name = item.text()
+        self.current_project = project_name
+        self.update_project_info()
+        self.load_description()
+        self.delete_btn.setEnabled(True)
+        self.flow_btn.setEnabled(True)
+        
+        # Убеждаемся, что элемент остается выделенным
+        self.project_list.setCurrentItem(item)
+        
+    def select_project(self, project_name):
+        """Программный выбор проекта."""
+        for i in range(self.project_list.count()):
+            item = self.project_list.item(i)
+            if item.text() == project_name:
+                self.project_list.setCurrentItem(item)
+                self.on_project_selected(item)
+                break
+                
+    def update_project_info(self):
+        """Обновление информации о проекте."""
+        if self.current_project:
+            full_path = os.path.join(self.project_path, self.current_project)
+            self.project_info.setText(f"Проект: {self.current_project}\nПуть: {full_path}")
+        else:
+            self.project_info.setText("Выберите проект")
+            
+    def load_description(self):
+        """Загрузка описания проекта из .avtogen файла."""
+        if not self.current_project:
+            return
+            
+        avtogen_file = os.path.join(
+            self.project_path, 
+            self.current_project, 
+            f"{self.current_project}.avtogen"
+        )
+        
+        try:
+            if os.path.exists(avtogen_file):
+                with open(avtogen_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    description = data.get("Description", "")
+                    self.description_edit.setPlainText(description)
+            else:
+                # Если .avtogen файл не существует, создаем его
+                self.create_avtogen_file(
+                    os.path.join(self.project_path, self.current_project),
+                    self.current_project
+                )
+                self.description_edit.clear()
+        except Exception as e:
+            self.show_error(f"Ошибка при загрузке описания: {e}")
+            
+    def save_description(self):
+        """Сохранение описания проекта в .avtogen файл."""
+        if not self.current_project:
+            return
+            
+        avtogen_file = os.path.join(
+            self.project_path, 
+            self.current_project, 
+            f"{self.current_project}.avtogen"
+        )
+        
+        try:
+            # Загружаем существующие данные или создаем новые
+            if os.path.exists(avtogen_file):
+                with open(avtogen_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+            else:
+                data = {
+                    "Project_Name": self.current_project,
+                    "Offset": 0,
+                    "Slide_Style": "По умолчанию",
+                    "Timings": 5,
+                    "Workflow_Status": {}
+                }
+            
+            # Обновляем описание
+            data["Description"] = self.description_edit.toPlainText()
+            
+            # Сохраняем файл
+            with open(avtogen_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+                
+        except Exception as e:
+            self.show_error(f"Ошибка при сохранении описания: {e}")
+            
+    def get_project_avtogen_data(self, project_name):
+        """Получение данных из .avtogen файла проекта."""
+        avtogen_file = os.path.join(
+            self.project_path, 
+            project_name, 
+            f"{project_name}.avtogen"
+        )
+        
+        try:
+            if os.path.exists(avtogen_file):
+                with open(avtogen_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+        except Exception as e:
+            self.show_error(f"Ошибка при чтении .avtogen файла: {e}")
+            
+        return None
+        
+    def open_flow_window(self):
+        """Открытие окна управления ходом генерации."""
+        if not self.current_project:
+            self.show_warning("Сначала выберите проект!")
+            return
+            
+        try:
+            # Импортируем модуль с окном управления генерацией
+            from flow_window import FlowGridWindow
+            
+            # Создаем и показываем окно, передавая информацию о проекте
+            avtogen_data = self.get_project_avtogen_data(self.current_project)
+            project_materials_path = os.path.join(self.project_path, self.current_project, "materials")
+            
+            self.flow_window = FlowGridWindow(
+                project_name=self.current_project,
+                project_path=os.path.join(self.project_path, self.current_project),
+                avtogen_data=avtogen_data,
+                materials_path=project_materials_path
+            )
+            self.flow_window.show()
+            
+        except ImportError:
+            self.show_error("Модуль flow_window не найден!\nУбедитесь, что файл flow_window.py находится в той же папке.")
+        except Exception as e:
+            self.show_error(f"Ошибка при открытии окна управления: {e}")
+            
+    def show_error(self, message):
+        """Показ сообщения об ошибке."""
+        QMessageBox.critical(self, "Ошибка", message)
+        
+    def show_warning(self, message):
+        """Показ предупреждения."""
+        QMessageBox.warning(self, "Предупреждение", message)
+        
+    def show_info(self, message):
+        """Показ информационного сообщения."""
+        QMessageBox.information(self, "Информация", message)
+            
+    def show_error(self, message):
+        """Показ сообщения об ошибке."""
+        QMessageBox.critical(self, "Ошибка", message)
+        
+    def show_warning(self, message):
+        """Показ предупреждения."""
+        QMessageBox.warning(self, "Предупреждение", message)
+        
+    def show_info(self, message):
+        """Показ информационного сообщения."""
+        QMessageBox.information(self, "Информация", message)
 
 
 def main():
+    """Главная функция приложения."""
     app = QApplication(sys.argv)
-    window = ColorGridWindow()
+    
+    # Установка стиля приложения
+    app.setStyle('Fusion')
+    
+    window = ProjectManager()
     window.show()
+    
     sys.exit(app.exec_())
+
 
 if __name__ == "__main__":
     main()
